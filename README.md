@@ -1,2 +1,2 @@
-# SolenoidDemo
-A demo using solenoids and magnetic levitation to demonstrate the conceptual movement of hoverboards. 
+# Magnetic Levitation Half-Pipe
+A demo using actuators and magnetic levitation to demonstrate the conceptual movement of hoverboards. 
