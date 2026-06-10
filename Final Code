@@ -1,0 +1,104 @@
+//This final code was made in colaboration with mudcup and Google Gemini
+//Uploaded June 9th 2026
+
+// --- Actuator 1 (Left Side) ---
+const int leftInput1 = 3;  
+const int leftInput2 = 2;  
+const int leftEnable  = 9;  // PWM Speed Pin
+
+
+// --- Actuator 2 (Right Side) ---
+const int rightInput3 = 4; 
+const int rightInput4 = 5; 
+const int rightEnable = 10; // PWM Speed Pin
+
+
+// --- Potentiometer Pin ---
+const int potPin = A0;      // Controls Motor Speed
+
+
+// --- Stroke Calibration ---
+const unsigned long strokeTime = 1950; // Your tuned stroke time
+const int maxSpeedLimit = 195;         // Your preferred maximum speed limit
+// Stroking to the max limit causes a short buffer which is eliminated when cutting the motor short.
+
+
+// --- Timing Variables ---
+unsigned long previousMillis = 0;
+bool leftExtending = true;            
+int currentMotorSpeed = 0;
+
+
+void setup() {
+ pinMode(leftInput1, OUTPUT);
+ pinMode(leftInput2, OUTPUT);
+ pinMode(leftEnable, OUTPUT);
+ pinMode(rightInput3, OUTPUT);
+ pinMode(rightInput4, OUTPUT);
+ pinMode(rightEnable, OUTPUT);
+
+
+ pinMode(potPin, INPUT);
+
+
+ stopAllMotors();
+}
+
+
+void loop() {
+ // 1. Read the Dial position (Value is between 0 and 1023)
+ int potValue = analogRead(potPin);
+
+
+ // 2. Map the 0-1023 dial value down to a 0-185 speed range
+ currentMotorSpeed = map(potValue, 0, 1023, 0, maxSpeedLimit);
+
+
+ // 3. If the speed is close to zero, completely turn off the motors to prevent buzzing
+ if (currentMotorSpeed < 10) {
+   stopAllMotors();
+ }
+ else {
+   // 4. Handle the continuous alternating rocking timing
+   unsigned long currentMillis = millis();
+   if (currentMillis - previousMillis >= strokeTime) {
+     previousMillis = currentMillis;
+     leftExtending = !leftExtending;
+   }
+  
+   // 5. Update the motors with the freshly dialed speed
+   updateMotors();
+ }
+}
+
+
+void updateMotors() {
+ // Pass the live dialed speed straight into the H-Bridge enable pins
+ analogWrite(leftEnable, currentMotorSpeed);
+ analogWrite(rightEnable, currentMotorSpeed);
+
+
+ if (leftExtending) {
+   // Phase A: Left OUT, Right IN
+   digitalWrite(leftInput1, HIGH);
+   digitalWrite(leftInput2, LOW);
+   digitalWrite(rightInput3, LOW);
+   digitalWrite(rightInput4, HIGH);
+ } else {
+   // Phase B: Left IN, Right OUT
+   digitalWrite(leftInput1, LOW);
+   digitalWrite(leftInput2, HIGH);
+   digitalWrite(rightInput3, HIGH);
+   digitalWrite(rightInput4, LOW);
+ }
+}
+
+
+void stopAllMotors() {
+ digitalWrite(leftEnable, LOW);
+ digitalWrite(rightEnable, LOW);
+ digitalWrite(leftInput1, LOW);
+ digitalWrite(leftInput2, LOW);
+ digitalWrite(rightInput3, LOW);
+ digitalWrite(rightInput4, LOW);
+}
